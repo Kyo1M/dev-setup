@@ -90,16 +90,18 @@ plugins.txt に載せるのは、公式マーケットプレイスで有効に�
 Orca の設定の正本は `profiles/<profile>/profile-state.db`(SQLite)で、`orca-data.json` は移行前の書き出しが残っているだけである。Orca CLI には設定を読み書きするコマンドが無く、SQLite へ直接書くと版と整合を取る規則がわからないため、書き換えはしない。
 
 - export.sh: 個人 PC の SQLite を読み取り専用で開き、`profile_state_documents` の settings から許可リストのキーだけを抜いて `config/orca/settings.json` に書く。
-- 許可リストは見た目と操作感のキーにする(テーマ・アプリとエディタのフォント・エディタの折り返しやミニマップ・ターミナルのフォント・サイズ・太さ・行間・カーソル・テーマ・ペインの濃さ・スクロール感度・ブランチ名の接頭辞など)。キーの最終的な一覧は実装時に、Orca の設定画面の項目名との対応表を付けて決める。
-- Ctrl+G の受け取りに関わりうる `terminalShortcutPolicy` と `terminalMacOptionAsAlt` は許可リストに入れ、実装時に Ctrl+G への影響を確かめる。
+- 許可リストは見た目と操作感のキーにする(テーマ・アプリとエディタのフォント・エディタの折り返しやミニマップ・ターミナルのフォント・サイズ・太さ・行間・カーソル・テーマ・色の上書き・ペインの濃さ・スクロール感度・ブランチ名の接頭辞など)。Orca の既定値と比べて個人 PC で変えている項目を中心に選んだ(一覧は export.sh の `ORCA_KEYS`)。
+- 設定画面の項目名との対応表は持たない。Orca の版で画面が変わりうるので、会社 PC の Claude がキー名から手がかりを書いて本人に示す。
+- Ctrl+G の受け取りに関わりうる `terminalShortcutPolicy`(個人 PC は `orca-first`)と `terminalMacOptionAsAlt` は許可リストに入れる。Ctrl+G への影響は未確認で、個人 PC と同じ値にしておけば同じ動きになる、という扱いにする。
+- 確認のダイアログを省く設定(`skipDeleteWorktreeConfirm` 等)と色の上書き(`terminalColorOverrides`)は、入れるかを本人に聞く。
 - `agentDefaultArgs`(Claude を権限確認なしで起動する引数を含む)は会社 PC に持ち込まない。パス(workspaceDir・履歴)、アカウント、端末固有の値、状態(repos・worktree・セッション等)も抜かない。
 - check.sh: 会社 PC の SQLite を読み取り専用で開き、値を照合する。
 
 ### シェル・エディタ・git
 
-- `~/.zshenv` に `source ~/Developer/dev-setup/config/zsh/zshenv.zsh`。EDITOR / VISUAL / SUDO_EDITOR = hx を、Ctrl+G の mod が呼ぶ非対話シェルにも効かせる。
+- `~/.zshenv` に `source ~/Developer/dev-setup/config/zsh/zshenv.zsh`(ファイルが無いときは読まないガード付き)。EDITOR / VISUAL / SUDO_EDITOR = hx を、Ctrl+G の mod が呼ぶ非対話シェルにも効かせる。`uv tool install` の入れ先 `~/.local/bin` もここで PATH に足す。
 - `~/.zshrc` に `source ~/Developer/dev-setup/config/zsh/zshrc.zsh`。zoxide と starship は brew の PATH が前提なので、ステップ 1 で `~/.zprofile` に `brew shellenv` があるかを確かめる。
-- `~/.gitconfig` に `[include] path = ~/Developer/dev-setup/config/git/gitconfig`。user.name と email は手順の中で本人に聞いて `git config --global` で入れる。credential helper は載せない。
+- `~/.gitconfig` の末尾に新しい `[include]` 節を書く(既存の `[include]` 節に足すと、後ろの設定に負けることがあるため)。user.name と email は手順の中で本人に聞いて `git config --global` で入れる。credential helper は載せない。
 - Helix と starship は、既存ファイルがあれば `.bak` に退避してから symlink を張る。
 
 ### コンテキストテンプレートのローカル運用(CLAUDE.local.md)
@@ -153,7 +155,7 @@ skill のうち、使うのに認証や API キーが要るもの(gemini-ja-proo
 
 `export.sh` は許可リスト方式にする。設定ファイルから載せてよいキーだけを抜き、全部をコピーしてから消す方式は採らない(新しく増えた設定が素通りで公開されるため)。
 
-禁止語の検索(`scrub.sh`)は `git ls-files` の全体と、commit 予定の差分を対象にし(画像などのバイナリは、圧縮データの偶然の一致を拾うので除く)、1 件でもあれば止めて該当箇所を表示する。export.sh の最後と、個人 PC の pre-commit hook の両方から呼ぶ(手で直したあとの commit も通すため。公開リポジトリは一度 push すると履歴に残る)。禁止語はメールアドレス・クライアント名・ホームディレクトリの絶対パス・token や key 形式の文字列。一覧はクライアント名を含むので、git 管理外の `.scrub-words`(個人 PC にだけ置く)に書く。`.scrub-words` が無いときは止める。
+禁止語の検索(`scrub.sh`)は、追跡中の全ファイル・commit 予定の内容・commit メッセージ・push する commit の追加行を対象にし(画像などのバイナリは、圧縮データの偶然の一致を拾うので除く)、1 件でもあれば止めて該当箇所を表示する。export.sh の最後と、個人 PC の pre-commit・commit-msg・pre-push の hook から呼ぶ(手で直したあとの commit や `--no-verify` の commit も通すため。公開リポジトリは一度 push すると履歴に残る)。禁止語はメールアドレス・クライアント名・ホームディレクトリの絶対パス・token や key 形式の文字列。一覧はクライアント名を含むので、git 管理外の `.scrub-words`(個人 PC にだけ置く)に書く。`.scrub-words` が無いときは止める。
 
 ## 個人 PC と会社 PC のずれを防ぐ
 
@@ -166,7 +168,7 @@ mod は版の番号つきで入るので、claude-mods を直したら plugin.js
 | 変えたもの | 個人 PC | 会社 PC |
 |---|---|---|
 | Helix・starship・シェル・git | dev-setup の config を直して push(export.sh で書き出してもよい) | `git -C ~/Developer/dev-setup pull` で反映 |
-| Claude Code 設定・プラグイン・Orca 設定 | `scripts/export.sh` → commit → push | `git pull` → Claude に「差分を反映して」と頼み、ステップ 6・7・9 のうち該当するものをやり直す |
+| Claude Code 設定・プラグイン・Orca 設定 | `scripts/export.sh` → commit → push | Claude に「dev-setup を更新したので反映して」と頼む。Claude が pull し、前回反映した目印(`applied` タグ)からの差分を見て、ステップ 6・7・9 のうち該当するものをやり直す |
 | skill | Skills の main に push | `git -C ~/Developer/Skills pull`(新しい skill があれば `link-skills.sh` を再実行) |
 | mod | version を上げて claude-mods の main に push | `claude plugin marketplace update claude-mods` → `claude plugin update orca-split-editor@claude-mods` → `/reload-plugins` |
 | テンプレート | project-context-template の main に push | `git -C ~/Developer/project-context-template pull`(既に作ったコンテキストリポジトリへは反映しない) |
@@ -191,5 +193,5 @@ mod は版の番号つきで入るので、claude-mods を直したら plugin.js
 
 - 個人 PC で `export.sh` を実行し、禁止語検索が通ること、わざと禁止語を入れたファイルで export.sh と pre-commit hook の両方が止まること、3 リポジトリのどれかを作業ブランチにすると止まることを確かめる。
 - 個人 PC で `check.sh` を実行する。個人 PC は会社 PC の上位集合ではない(symlink でなく実ファイルの設定・directory 指定の claude-mods など)ので、ng になる項目が上の違いで説明できることを確かめる。
-- 空の HOME(`HOME=<scratchpad>`)で SETUP.md のステップ 3〜5 を試し、symlink・source・include・マージが既存ファイルを壊さないことを確かめる。
+- 空の HOME(`HOME=<scratchpad>`)で SETUP.md のステップ 4・6 を 2 回ずつ試し、symlink・source・include・マージが既存ファイルを壊さないことを確かめる。
 - 会社 PC での初回実行が本番の確認になる。止まった箇所は SETUP.md を直して個人 PC から push する。

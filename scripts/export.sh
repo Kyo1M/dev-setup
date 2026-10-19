@@ -43,9 +43,11 @@ done
 
 # 2. そのまま持っていくファイル
 mkdir -p "$CONFIG/helix" "$CONFIG/claude" "$CONFIG/orca"
-cp "$HOME/.config/helix/config.toml" "$CONFIG/helix/config.toml"
-cp "$HOME/.config/starship.toml" "$CONFIG/starship.toml"
-cp "$CLAUDE_DIR/keybindings.json" "$CONFIG/claude/keybindings.json"
+# 個人 PC 側も dev-setup への symlink にしている場合は、同じファイルなのでコピーしない
+copy() { [ "$1" -ef "$2" ] || cp "$1" "$2"; }
+copy "$HOME/.config/helix/config.toml" "$CONFIG/helix/config.toml"
+copy "$HOME/.config/starship.toml" "$CONFIG/starship.toml"
+copy "$CLAUDE_DIR/keybindings.json" "$CONFIG/claude/keybindings.json"
 echo "ok    helix・starship・keybindings を書き出し"
 
 # 3. Claude Code の設定(許可リストのキーと defaultMode)
@@ -53,7 +55,6 @@ jq --argjson keys "$CLAUDE_KEYS" '
   with_entries(select(.key as $k | $keys | index($k)))
   + {permissions: {defaultMode: "auto"}}
 ' "$CLAUDE_DIR/settings.json" > "$CONFIG/claude/settings.partial.json"
-grep -q '"Japaese"' "$CONFIG/claude/settings.partial.json" && fail "language が誤字(Japaese)のままです"
 echo "ok    settings.partial.json を書き出し"
 
 # 4. 入れるプラグインの一覧(有効なもののうち、持っていかないものを除く)

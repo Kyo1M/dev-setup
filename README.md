@@ -4,11 +4,13 @@
 
 ## 別の Mac に入れる
 
-その Mac の Orca で Claude Code を起動し、次の 1 行を渡します。GitHub のアカウントは要りません。
+その Mac の Orca で Claude Code を起動し、次の文を渡します。GitHub のアカウントは要りません。
 
 ```
-https://github.com/Kyo1M/dev-setup の SETUP.md を読んで、この Mac をセットアップしてください
+git clone https://github.com/Kyo1M/dev-setup ~/Developer/dev-setup を実行し、~/Developer/dev-setup/SETUP.md を読んで、上から順にこの Mac をセットアップしてください
 ```
+
+手順は clone したファイルを読ませます(Web ページとして読ませると要約されて、コマンドが落ちることがあるため)。Command Line Tools が無い Mac では、最初の `git clone` で導入のダイアログが出るので、先に済ませてください。
 
 途中で、git の名前とメールアドレス、Orca の設定画面での入力、最後の Claude Code の再起動を頼まれます。
 
@@ -33,8 +35,8 @@ skill・mod・コンテキストテンプレートの中身は、それぞれ [K
 
 | 変えたもの | 個人 PC | 別の Mac |
 |---|---|---|
-| Helix・starship・Claude Code の設定・プラグイン・Orca の設定 | `scripts/export.sh` → commit → push | `git pull` のあと Claude に「dev-setup を更新したので反映して」 |
-| シェル・git の設定 | `config/zsh`・`config/git` を直して push | `git pull` だけで反映 |
+| Helix・starship・Claude Code の設定・プラグイン・Orca の設定 | `scripts/export.sh` → commit → push | Claude に「dev-setup を更新したので反映して」(pull も Claude が行う) |
+| シェル・git の設定 | `config/zsh`・`config/git` を直して push | 同上(pull すれば読み直しは要らない) |
 | skill | Skills の main に push | `git -C ~/Developer/Skills pull` |
 | mod | `plugin.json` の version を上げて claude-mods の main に push | Claude に「dev-setup を更新したので反映して」 |
 
@@ -42,9 +44,9 @@ skill・mod・コンテキストテンプレートの中身は、それぞれ [K
 
 ## 公開してはいけない語の検索
 
-このリポジトリは公開です。`scripts/scrub.sh` が、メールアドレス・ホームディレクトリの絶対パス・トークンの形の文字列と、`.scrub-words` に書いた語(案件名など)を検索し、見つかれば止めます。`export.sh` の最後と commit の前(pre-commit hook)に動きます。
+このリポジトリは公開です。`scripts/scrub.sh` が、メールアドレス・ホームディレクトリの絶対パス・トークンの形の文字列と、`.scrub-words` に書いた語(案件名など)を検索し、見つかれば止めます。
 
-`.scrub-words` は git 管理外で、個人 PC にだけ置きます。clone し直したときは、`.scrub-words` を作ってから `git config core.hooksPath .githooks` を実行してください。
+検索は `export.sh` の最後と、commit 前(pre-commit)・commit メッセージ(commit-msg)・push 前(pre-push)の hook で動きます。`.scrub-words` は git 管理外で、個人 PC にだけ置きます。clone し直したときは、`.scrub-words` を作ってから `git config core.hooksPath .githooks` を実行してください。
 
 ## 点検
 
