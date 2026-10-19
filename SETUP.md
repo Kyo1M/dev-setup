@@ -1,6 +1,6 @@
 # SETUP.md(Claude Code が実行する手順)
 
-この手順は、作者の個人 PC と同じ作業環境(Orca・Helix・yazi・lazygit・Ctrl+G で開くエディタの mod・自作 skill・コンテキストテンプレート)をこの Mac に作るためのものです。上から順に実行してください。
+この手順は、作者の個人 PC と同じ作業環境(Orca・Helix・yazi・Ctrl+G で開くエディタの mod・自作 skill・コンテキストテンプレート)をこの Mac に作るためのものです。上から順に実行してください。
 
 ## 進め方の約束
 
@@ -66,7 +66,7 @@ brew bundle --file ~/Developer/dev-setup/Brewfile
 
 既にあるとき: dev-setup が既にあれば `git -C ~/Developer/dev-setup pull --ff-only` にします。
 
-確認: `hx --version`、`starship --version`、`yazi --version`、`lazygit --version`、`node --version`、`pandoc --version`、`uv --version`、`jq --version` がそれぞれ版を返すこと。
+確認: `hx --version`、`starship --version`、`yazi --version`、`node --version`、`pandoc --version`、`uv --version`、`jq --version` がそれぞれ版を返すこと。
 
 ## 3. Orca
 

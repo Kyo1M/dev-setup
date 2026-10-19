@@ -8,7 +8,6 @@ brew "jq"
 brew "node"
 brew "pandoc"
 brew "uv"
-brew "lazygit"
 brew "yazi"
 # yazi が検索とプレビューに使う(fd・rg・fzf は検索、ffmpeg・poppler・imagemagick・7z はプレビュー)
 brew "fd"

@@ -39,7 +39,7 @@ dev-setup は薄く保つ。skill・mod・テンプレートの中身は既存�
 dev-setup/
 ├── README.md          人向け。会社 PC の Claude に渡す 1 行と、更新の流れだけ
 ├── SETUP.md           会社 PC の Claude が上から実行する手順書
-├── Brewfile           helix, starship, zoxide, bat, git-delta, jq, node, pandoc, uv, lazygit, yazi(と yazi が使う fd, ripgrep, fzf, ffmpeg, poppler, imagemagick, sevenzip), font-hack-nerd-font
+├── Brewfile           helix, starship, zoxide, bat, git-delta, jq, node, pandoc, uv, yazi(と yazi が使う fd, ripgrep, fzf, ffmpeg, poppler, imagemagick, sevenzip), font-hack-nerd-font
 ├── .gitignore         .scrub-words を除外
 ├── config/
 │   ├── helix/config.toml            ~/.config/helix/config.toml から symlink
@@ -70,7 +70,6 @@ dev-setup/
 | Claude Code 設定 | `settings.partial.json` を既存の settings.json へ jq でマージ(Orca も書き込むファイルなので symlink にしない)。`keybindings.json` は既存を `.bak` に退避して dev-setup への symlink にする | dev-setup |
 | Orca 設定 | 本人が Orca の設定画面で `config/orca/settings.json` の値を入れる。Claude は値の表を示し、check.sh で照合する | dev-setup |
 | Helix・starship・yazi・シェル・git | symlink・source・include の 1 行を足す。設定の中身は dev-setup 側。yazi のプラグインは `package.toml` から `ya pkg install` | dev-setup |
-| lazygit | brew で入れるだけで、設定は持っていかない(macOS の lazygit が読むのは `~/Library/Application Support/lazygit/config.yml` で、個人 PC のそれは空のため。`~/.config/lazygit/config.yml` は読まれていない) | dev-setup |
 
 mod の入れ方は claude-mods の README の `/plugin install` と同じ内容を CLI で行うもので、会社 PC の Claude が対話なしで実行できるよう CLI 形式を使う。claude-mods の README にも CLI 形式を併記し、2 つの書き方が食い違わないようにする。
 
