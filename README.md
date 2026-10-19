@@ -22,6 +22,7 @@ git clone https://github.com/Kyo1M/dev-setup ~/Developer/dev-setup を実行し�
 | `Brewfile` | Helix・starship・zoxide・bat・delta・jq・node・pandoc・uv・yazi(と yazi が検索に使う fd・ripgrep・fzf、プレビューに使う ffmpeg・poppler・imagemagick・sevenzip)・Hack Nerd Font | `brew bundle` |
 | `config/helix`・`config/starship.toml` | エディタとプロンプトの設定 | symlink |
 | `config/yazi` | ファイラーの設定(ファイルを Helix で開く)と、入れるプラグインの一覧 | symlink・`ya pkg install` |
+| `config/ghostty` | Ghostty の設定と配色(Mariana)。Orca のターミナルの配色・フォント・余白の元 | symlink → Orca の「Import from Ghostty」 |
 | `config/zsh` | `EDITOR=hx` 等と、zoxide・starship・bat の設定 | `~/.zshenv`・`~/.zshrc` から source |
 | `config/git/gitconfig` | delta・merge・diff の設定 | `~/.gitconfig` から include |
 | `config/claude` | Claude Code の設定の一部・keybindings(Ctrl+G を mod に回す)・入れるプラグインの一覧 | マージ・symlink・`claude plugin install` |
@@ -32,11 +33,13 @@ skill・mod・コンテキストテンプレートの中身は、それぞれ [K
 
 グローバルの CLAUDE.md・memory・認証情報・Codex の設定は持っていきません。
 
+`config/ghostty/themes/Mariana` は Ghostty に同梱の配色ファイル(元は [iTerm2-Color-Schemes](https://github.com/mbadolato/iTerm2-Color-Schemes)、MIT ライセンス)の写しです。
+
 ## 個人 PC で設定を変えたとき
 
 | 変えたもの | 個人 PC | 別の Mac |
 |---|---|---|
-| Helix・starship・yazi・Claude Code の設定・プラグイン・Orca の設定 | `scripts/export.sh` → commit → push | Claude に「dev-setup を更新したので反映して」(pull も Claude が行う) |
+| Helix・starship・yazi・Ghostty・Claude Code の設定・プラグイン・Orca の設定 | `scripts/export.sh` → commit → push | Claude に「dev-setup を更新したので反映して」(pull も Claude が行う) |
 | シェル・git の設定 | `config/zsh`・`config/git` を直して push | 同上(pull すれば読み直しは要らない) |
 | skill | Skills の main に push | `git -C ~/Developer/Skills pull` |
 | mod | `plugin.json` の version を上げて claude-mods の main に push | Claude に「dev-setup を更新したので反映して」 |

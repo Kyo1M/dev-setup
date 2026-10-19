@@ -44,6 +44,7 @@ dev-setup/
 ├── config/
 │   ├── helix/config.toml            ~/.config/helix/config.toml から symlink
 │   ├── starship.toml                ~/.config/starship.toml から symlink
+│   ├── ghostty/                     config と themes/<配色>。~/.config/ghostty/ から symlink。Orca の「Import from Ghostty」で読み込む
 │   ├── yazi/                        yazi.toml・keymap.toml・init.lua・package.toml。~/.config/yazi/ の各ファイルから symlink。プラグインは ya pkg install
 │   ├── zsh/zshenv.zsh               EDITOR / VISUAL / SUDO_EDITOR = hx。~/.zshenv から source
 │   ├── zsh/zshrc.zsh                zoxide・starship・bat。~/.zshrc から source
@@ -68,8 +69,8 @@ dev-setup/
 | 公式などのプラグイン | `plugins.txt` の全件を `claude plugin install <id> --scope user`(マーケットプレイスは先に `marketplace add`) | dev-setup |
 | コンテキストテンプレート | `~/Developer/project-context-template` に clone。新しい案件は中身を `.git` と `.github` 抜きでコピー → `git init` → `CLAUDE.local.md` を置く → AGENTS.md の初期セットアップフロー | Kyo1M/project-context-template |
 | Claude Code 設定 | `settings.partial.json` を既存の settings.json へ jq でマージ(Orca も書き込むファイルなので symlink にしない)。`keybindings.json` は既存を `.bak` に退避して dev-setup への symlink にする | dev-setup |
-| Orca 設定 | 本人が Orca の設定画面で `config/orca/settings.json` の値を入れる。Claude は値の表を示し、check.sh で照合する | dev-setup |
-| Helix・starship・yazi・シェル・git | symlink・source・include の 1 行を足す。設定の中身は dev-setup 側。yazi のプラグインは `package.toml` から `ya pkg install` | dev-setup |
+| Orca 設定 | 本人がまず Orca の設定画面の「Import from Ghostty」で `~/.config/ghostty/config` を読み込む(ターミナルの配色・フォント・行の高さ・余白・透過・ぼかし・入力中のカーソル非表示)。残りは `config/orca/settings.json` の値を設定画面で入れる。Claude は違う項目の表を示し、check.sh で照合する | dev-setup |
+| Helix・starship・yazi・Ghostty・シェル・git | symlink・source・include の 1 行を足す。設定の中身は dev-setup 側。yazi のプラグインは `package.toml` から `ya pkg install` | dev-setup |
 
 mod の入れ方は claude-mods の README の `/plugin install` と同じ内容を CLI で行うもので、会社 PC の Claude が対話なしで実行できるよう CLI 形式を使う。claude-mods の README にも CLI 形式を併記し、2 つの書き方が食い違わないようにする。
 
@@ -94,7 +95,8 @@ Orca の設定の正本は `profiles/<profile>/profile-state.db`(SQLite)で、`o
 - 許可リストは見た目と操作感のキーにする(テーマ・アプリとエディタのフォント・エディタの折り返しやミニマップ・ターミナルのフォント・サイズ・太さ・行間・カーソル・テーマ・色の上書き・ペインの濃さ・スクロール感度・ブランチ名の接頭辞など)。Orca の既定値と比べて個人 PC で変えている項目を中心に選んだ(一覧は export.sh の `ORCA_KEYS`)。
 - 設定画面の項目名との対応表は持たない。Orca の版で画面が変わりうるので、会社 PC の Claude がキー名から手がかりを書いて本人に示す。
 - Ctrl+G の受け取りに関わりうる `terminalShortcutPolicy`(個人 PC は `orca-first`)と `terminalMacOptionAsAlt` は許可リストに入れる。Ctrl+G への影響は未確認で、個人 PC と同じ値にしておけば同じ動きになる、という扱いにする。
-- 確認のダイアログを省く設定(`skipDeleteWorktreeConfirm` 等)と色の上書き(`terminalColorOverrides`)は、入れるかを本人に聞く。
+- 確認のダイアログを省く設定(`skipDeleteWorktreeConfirm` 等)は、入れるかを本人に聞く。
+- ターミナルの配色(`terminalColorOverrides`)は個人 PC でも Ghostty の設定(theme = Mariana)から読み込んだもので、値が一致する。会社 PC でも Ghostty の設定と配色ファイルを `~/.config/ghostty/` に置き、Orca の「Import from Ghostty」で入れる。Orca はこの配色ファイルを `~/.config/ghostty/themes/` か Ghostty 本体の中から探すので、Ghostty 本体が無い会社 PC でも読めるよう配色ファイルを同梱する。
 - `agentDefaultArgs`(Claude を権限確認なしで起動する引数を含む)は会社 PC に持ち込まない。パス(workspaceDir・履歴)、アカウント、端末固有の値、状態(repos・worktree・セッション等)も抜かない。
 - check.sh: 会社 PC の SQLite を読み取り専用で開き、値を照合する。
 

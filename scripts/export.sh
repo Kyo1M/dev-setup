@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # 個人 PC で実行する。今の設定のうち、会社 PC に持っていくものだけを config/ に書き出す。
 # 載せてよいキーだけを抜く許可リスト方式。最後に scrub.sh で禁止語を検索する。
-# 置き場は環境変数で差し替え可: DEV_DIR CLAUDE_DIR ORCA_PROFILE_DIR
+# 置き場は環境変数で差し替え可: DEV_DIR CLAUDE_DIR ORCA_PROFILE_DIR GHOSTTY_CONFIG
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 DEV_DIR="${DEV_DIR:-$HOME/Developer}"
 CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 ORCA_PROFILE_DIR="${ORCA_PROFILE_DIR:-$HOME/Library/Application Support/orca/profiles/local-default}"
+GHOSTTY_CONFIG="${GHOSTTY_CONFIG:-$HOME/Library/Application Support/com.mitchellh.ghostty/config}"
 CONFIG="$REPO_DIR/config"
 
 # 会社 PC に持っていかないプラグイン
@@ -42,7 +43,7 @@ for name in Skills claude-mods project-context-template; do
 done
 
 # 2. そのまま持っていくファイル
-mkdir -p "$CONFIG/helix" "$CONFIG/yazi" "$CONFIG/claude" "$CONFIG/orca"
+mkdir -p "$CONFIG/helix" "$CONFIG/yazi" "$CONFIG/ghostty/themes" "$CONFIG/claude" "$CONFIG/orca"
 # 個人 PC 側も dev-setup への symlink にしている場合は、同じファイルなのでコピーしない
 copy() { [ "$1" -ef "$2" ] || cp "$1" "$2"; }
 copy "$HOME/.config/helix/config.toml" "$CONFIG/helix/config.toml"
@@ -52,7 +53,18 @@ for f in yazi.toml keymap.toml init.lua package.toml; do
   copy "$HOME/.config/yazi/$f" "$CONFIG/yazi/$f"
 done
 copy "$CLAUDE_DIR/keybindings.json" "$CONFIG/claude/keybindings.json"
-echo "ok    helix・starship・yazi・keybindings を書き出し"
+# Ghostty の設定と、theme = で指す配色ファイル(Orca の「Import from Ghostty」が読む。会社 PC に Ghostty 本体が無くても配色を引けるよう同梱する)
+copy "$GHOSTTY_CONFIG" "$CONFIG/ghostty/config"
+theme="$(sed -nE 's/^theme *= *"?([^"#]*[^"# ])"? *(#.*)?$/\1/p' "$CONFIG/ghostty/config" | tail -1)"
+if [ -n "$theme" ]; then
+  src=""
+  for d in "$HOME/.config/ghostty/themes" /Applications/Ghostty.app/Contents/Resources/ghostty/themes; do
+    [ -f "$d/$theme" ] && src="$d/$theme" && break
+  done
+  [ -n "$src" ] || fail "Ghostty の配色 $theme が見つかりません"
+  copy "$src" "$CONFIG/ghostty/themes/$theme"
+fi
+echo "ok    helix・starship・yazi・ghostty・keybindings を書き出し"
 
 # 3. Claude Code の設定(許可リストのキーと defaultMode)
 jq --argjson keys "$CLAUDE_KEYS" '
