@@ -1,6 +1,6 @@
 # dev-setup
 
-個人 PC と同じ作業環境(Orca・Helix・Ctrl+G で開くエディタの mod・自作 skill・コンテキストテンプレート)を、別の Mac に作るためのリポジトリです。手順は Claude Code が読んで実行します。
+個人 PC と同じ作業環境(Orca・Helix・yazi・lazygit・Ctrl+G で開くエディタの mod・自作 skill・コンテキストテンプレート)を、別の Mac に作るためのリポジトリです。手順は Claude Code が読んで実行します。
 
 ## 別の Mac に入れる
 
@@ -19,8 +19,9 @@ git clone https://github.com/Kyo1M/dev-setup ~/Developer/dev-setup を実行し�
 | 置き場 | 中身 | 別の Mac での読み方 |
 |---|---|---|
 | `SETUP.md` | Claude Code が上から実行する手順 | Claude が読む |
-| `Brewfile` | Helix・starship・zoxide・bat・delta・jq・node・pandoc・uv・Hack Nerd Font | `brew bundle` |
+| `Brewfile` | Helix・starship・zoxide・bat・delta・jq・node・pandoc・uv・lazygit・yazi(とプレビュー用の fd・ripgrep・fzf・ffmpeg・poppler・imagemagick・sevenzip)・Hack Nerd Font | `brew bundle` |
 | `config/helix`・`config/starship.toml` | エディタとプロンプトの設定 | symlink |
+| `config/yazi` | ファイラーの設定(ファイルを Helix で開く)と、入れるプラグインの一覧 | symlink・`ya pkg install` |
 | `config/zsh` | `EDITOR=hx` 等と、zoxide・starship・bat の設定 | `~/.zshenv`・`~/.zshrc` から source |
 | `config/git/gitconfig` | delta・merge・diff の設定 | `~/.gitconfig` から include |
 | `config/claude` | Claude Code の設定の一部・keybindings(Ctrl+G を mod に回す)・入れるプラグインの一覧 | マージ・symlink・`claude plugin install` |
@@ -35,7 +36,7 @@ skill・mod・コンテキストテンプレートの中身は、それぞれ [K
 
 | 変えたもの | 個人 PC | 別の Mac |
 |---|---|---|
-| Helix・starship・Claude Code の設定・プラグイン・Orca の設定 | `scripts/export.sh` → commit → push | Claude に「dev-setup を更新したので反映して」(pull も Claude が行う) |
+| Helix・starship・yazi・Claude Code の設定・プラグイン・Orca の設定 | `scripts/export.sh` → commit → push | Claude に「dev-setup を更新したので反映して」(pull も Claude が行う) |
 | シェル・git の設定 | `config/zsh`・`config/git` を直して push | 同上(pull すれば読み直しは要らない) |
 | skill | Skills の main に push | `git -C ~/Developer/Skills pull` |
 | mod | `plugin.json` の version を上げて claude-mods の main に push | Claude に「dev-setup を更新したので反映して」 |

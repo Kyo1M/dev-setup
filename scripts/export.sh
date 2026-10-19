@@ -42,13 +42,17 @@ for name in Skills claude-mods project-context-template; do
 done
 
 # 2. そのまま持っていくファイル
-mkdir -p "$CONFIG/helix" "$CONFIG/claude" "$CONFIG/orca"
+mkdir -p "$CONFIG/helix" "$CONFIG/yazi" "$CONFIG/claude" "$CONFIG/orca"
 # 個人 PC 側も dev-setup への symlink にしている場合は、同じファイルなのでコピーしない
 copy() { [ "$1" -ef "$2" ] || cp "$1" "$2"; }
 copy "$HOME/.config/helix/config.toml" "$CONFIG/helix/config.toml"
 copy "$HOME/.config/starship.toml" "$CONFIG/starship.toml"
+# yazi のプラグインの中身(plugins/)は持たず、package.toml の一覧から ya pkg install で入れる
+for f in yazi.toml keymap.toml init.lua package.toml; do
+  copy "$HOME/.config/yazi/$f" "$CONFIG/yazi/$f"
+done
 copy "$CLAUDE_DIR/keybindings.json" "$CONFIG/claude/keybindings.json"
-echo "ok    helix・starship・keybindings を書き出し"
+echo "ok    helix・starship・yazi・keybindings を書き出し"
 
 # 3. Claude Code の設定(許可リストのキーと defaultMode)
 jq --argjson keys "$CLAUDE_KEYS" '

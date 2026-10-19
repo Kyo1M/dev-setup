@@ -17,9 +17,9 @@
 次の操作は本人の環境の設定を書き換えるので、ステップ 0 の前にまとめて説明し、了承を取ってから進めます。Claude Code が操作ごとに許可を求めてきたら、本人に承認してもらいます。
 
 - `~/.zprofile`・`~/.zshenv`・`~/.zshrc`・`~/.gitconfig` に 1 行ずつ追記する
-- `~/.config/helix/config.toml`・`~/.config/starship.toml`・`~/.claude/keybindings.json` を dev-setup への symlink にする(既存は退避)
+- `~/.config/helix/config.toml`・`~/.config/starship.toml`・`~/.config/yazi/` の設定 4 つ・`~/.claude/keybindings.json` を dev-setup への symlink にする(既存は退避)
 - `~/.claude/settings.json` にモデル・言語・権限モード(`auto`)などの値をマージする
-- Homebrew のパッケージ、Claude Code のプラグイン、Orca の skill、worklog の CLI を入れる
+- Homebrew のパッケージ、yazi のプラグイン、Claude Code のプラグイン、Orca の skill、worklog の CLI を入れる
 
 ## 0. 前提の確認
 
@@ -66,7 +66,7 @@ brew bundle --file ~/Developer/dev-setup/Brewfile
 
 既にあるとき: dev-setup が既にあれば `git -C ~/Developer/dev-setup pull --ff-only` にします。
 
-確認: `hx --version`、`starship --version`、`node --version`、`pandoc --version`、`uv --version`、`jq --version` がそれぞれ版を返すこと。
+確認: `hx --version`、`starship --version`、`yazi --version`、`lazygit --version`、`node --version`、`pandoc --version`、`uv --version`、`jq --version` がそれぞれ版を返すこと。
 
 ## 3. Orca
 
@@ -77,11 +77,12 @@ brew bundle --file ~/Developer/dev-setup/Brewfile
 
 確認: `/Applications/Orca.app/Contents/Resources/bin/orca --version` が版を返すこと。
 
-## 4. シェル・Helix・starship・git
+## 4. シェル・Helix・starship・yazi・git
 
 やること(既にある行は足しません。何度実行しても同じ結果になります):
 
 ```sh
+for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do [ -x "$b" ] && eval "$("$b" shellenv)" && break; done
 D="$HOME/Developer/dev-setup/config"
 ts="$(date +%Y%m%d%H%M%S)"
 line_zshenv='[ -r "$HOME/Developer/dev-setup/config/zsh/zshenv.zsh" ] && source "$HOME/Developer/dev-setup/config/zsh/zshenv.zsh"'
@@ -89,13 +90,17 @@ line_zshrc='[ -r "$HOME/Developer/dev-setup/config/zsh/zshrc.zsh" ] && source "$
 grep -qsF "$line_zshenv" ~/.zshenv || printf '\n%s\n' "$line_zshenv" >> ~/.zshenv
 grep -qsF "$line_zshrc" ~/.zshrc || printf '\n%s\n' "$line_zshrc" >> ~/.zshrc
 
-mkdir -p ~/.config/helix
-for pair in "$HOME/.config/helix/config.toml:$D/helix/config.toml" "$HOME/.config/starship.toml:$D/starship.toml"; do
+mkdir -p ~/.config/helix ~/.config/yazi
+pairs=("$HOME/.config/helix/config.toml:$D/helix/config.toml" "$HOME/.config/starship.toml:$D/starship.toml")
+for f in yazi.toml keymap.toml init.lua package.toml; do pairs+=("$HOME/.config/yazi/$f:$D/yazi/$f"); done
+for pair in "${pairs[@]}"; do
   link="${pair%%:*}"; target="${pair#*:}"
   [ -L "$link" ] && [ "$(readlink "$link")" = "$target" ] && continue
   { [ -e "$link" ] || [ -L "$link" ]; } && mv "$link" "$link.bak.$ts"
   ln -s "$target" "$link"
 done
+# yazi のプラグインは package.toml の一覧から GitHub の匿名アクセスで入れる
+ya pkg install
 
 # 既存の [include] 節に足すと後ろの設定に負けることがあるので、末尾に新しい節を書く
 grep -qsF "$D/git/gitconfig" ~/.gitconfig || printf '\n[include]\n\tpath = %s\n' "$D/git/gitconfig" >> ~/.gitconfig
@@ -104,13 +109,15 @@ grep -qsF "$D/git/gitconfig" ~/.gitconfig || printf '\n[include]\n\tpath = %s\n'
 既にあるとき:
 
 - `~/.zshenv` と `~/.zshrc` に `EDITOR`・`VISUAL`・starship・zoxide の設定が別にあれば、どちらを残すかを本人に聞きます(後に書いた方が勝ちます)。
-- Helix と starship の既存の設定は `.bak.<日時>` に退避されます。退避したら本人に伝えます。
+- Helix・starship・yazi の既存の設定は `.bak.<日時>` に退避されます。退避したら本人に伝えます。
+- `~/.config/yazi/plugins/` に package.toml に無いプラグインがあれば、消さずに本人に伝えます。
 
 本人に聞くこと: git の名前とメールアドレス。聞いたら `git config --global user.name "<名前>"` と `git config --global user.email "<メール>"` を実行します。
 
 確認:
 
 - `env -i HOME="$HOME" PATH="$PATH" zsh -c 'echo $VISUAL'` が `hx` を返すこと。
+- `ls ~/.config/yazi/plugins` に `git.yazi`・`full-border.yazi`・`smart-enter.yazi` があること。
 - `git config --show-origin --get core.pager` が `delta` を返すこと。`delta` でなければ、出どころのファイルと行を本人に見せ、どちらを残すかを聞きます。
 
 ## 5. skill

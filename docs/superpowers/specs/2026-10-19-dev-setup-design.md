@@ -39,11 +39,12 @@ dev-setup は薄く保つ。skill・mod・テンプレートの中身は既存�
 dev-setup/
 ├── README.md          人向け。会社 PC の Claude に渡す 1 行と、更新の流れだけ
 ├── SETUP.md           会社 PC の Claude が上から実行する手順書
-├── Brewfile           helix, starship, zoxide, bat, git-delta, jq, node, pandoc, uv, font-hack-nerd-font
+├── Brewfile           helix, starship, zoxide, bat, git-delta, jq, node, pandoc, uv, lazygit, yazi(と yazi が使う fd, ripgrep, fzf, ffmpeg, poppler, imagemagick, sevenzip), font-hack-nerd-font
 ├── .gitignore         .scrub-words を除外
 ├── config/
 │   ├── helix/config.toml            ~/.config/helix/config.toml から symlink
 │   ├── starship.toml                ~/.config/starship.toml から symlink
+│   ├── yazi/                        yazi.toml・keymap.toml・init.lua・package.toml。~/.config/yazi/ の各ファイルから symlink。プラグインは ya pkg install
 │   ├── zsh/zshenv.zsh               EDITOR / VISUAL / SUDO_EDITOR = hx。~/.zshenv から source
 │   ├── zsh/zshrc.zsh                zoxide・starship・bat。~/.zshrc から source
 │   ├── git/gitconfig                delta・merge・diff。~/.gitconfig から [include]
@@ -68,7 +69,8 @@ dev-setup/
 | コンテキストテンプレート | `~/Developer/project-context-template` に clone。新しい案件は中身を `.git` と `.github` 抜きでコピー → `git init` → `CLAUDE.local.md` を置く → AGENTS.md の初期セットアップフロー | Kyo1M/project-context-template |
 | Claude Code 設定 | `settings.partial.json` を既存の settings.json へ jq でマージ(Orca も書き込むファイルなので symlink にしない)。`keybindings.json` は既存を `.bak` に退避して dev-setup への symlink にする | dev-setup |
 | Orca 設定 | 本人が Orca の設定画面で `config/orca/settings.json` の値を入れる。Claude は値の表を示し、check.sh で照合する | dev-setup |
-| Helix・starship・シェル・git | symlink・source・include の 1 行を足す。設定の中身は dev-setup 側 | dev-setup |
+| Helix・starship・yazi・シェル・git | symlink・source・include の 1 行を足す。設定の中身は dev-setup 側。yazi のプラグインは `package.toml` から `ya pkg install` | dev-setup |
+| lazygit | brew で入れるだけで、設定は持っていかない(macOS の lazygit が読むのは `~/Library/Application Support/lazygit/config.yml` で、個人 PC のそれは空のため。`~/.config/lazygit/config.yml` は読まれていない) | dev-setup |
 
 mod の入れ方は claude-mods の README の `/plugin install` と同じ内容を CLI で行うもので、会社 PC の Claude が対話なしで実行できるよう CLI 形式を使う。claude-mods の README にも CLI 形式を併記し、2 つの書き方が食い違わないようにする。
 
@@ -102,7 +104,7 @@ Orca の設定の正本は `profiles/<profile>/profile-state.db`(SQLite)で、`o
 - `~/.zshenv` に `source ~/Developer/dev-setup/config/zsh/zshenv.zsh`(ファイルが無いときは読まないガード付き)。EDITOR / VISUAL / SUDO_EDITOR = hx を、Ctrl+G の mod が呼ぶ非対話シェルにも効かせる。`uv tool install` の入れ先 `~/.local/bin` もここで PATH に足す。
 - `~/.zshrc` に `source ~/Developer/dev-setup/config/zsh/zshrc.zsh`。zoxide と starship は brew の PATH が前提なので、ステップ 1 で `~/.zprofile` に `brew shellenv` があるかを確かめる。
 - `~/.gitconfig` の末尾に新しい `[include]` 節を書く(既存の `[include]` 節に足すと、後ろの設定に負けることがあるため)。user.name と email は手順の中で本人に聞いて `git config --global` で入れる。credential helper は載せない。
-- Helix と starship は、既存ファイルがあれば `.bak` に退避してから symlink を張る。
+- Helix・starship・yazi は、既存ファイルがあれば `.bak` に退避してから symlink を張る。yazi はディレクトリごとではなく設定ファイル 4 つを symlink にする(`ya pkg install` がプラグインを `~/.config/yazi/plugins/` に入れるので、ディレクトリごとだと dev-setup の中に入ってしまう)。
 
 ### コンテキストテンプレートのローカル運用(CLAUDE.local.md)
 
@@ -141,7 +143,7 @@ project-context-template の AGENTS.md は、push・PR のマージによる確�
 1. Command Line Tools(`xcode-select -p`)と Homebrew の確認、`~/.zprofile` の `brew shellenv`。
 2. dev-setup の clone と `brew bundle`。
 3. Orca の確認。brew の `orca` は別のソフトなので使わない。`/Applications/Orca.app/Contents/Resources/bin/orca` が無ければ、公式サイトから入れて /Applications に置くよう本人に頼んで止まる。
-4. シェル・Helix・starship・git の 1 行追加と symlink。
+4. シェル・Helix・starship・yazi・git の 1 行追加と symlink、yazi のプラグインの導入。
 5. skill の clone と `link-skills.sh`(cwd を `~/Developer/Skills` にして実行)。worklog の CLI は `uv tool install git+https://github.com/Kyo1M/claude-worklog`。
 6. Claude Code 設定のマージと keybindings の symlink。
 7. マーケットプレイスの追加と plugins.txt の全件 install。
@@ -167,7 +169,7 @@ mod は版の番号つきで入るので、claude-mods を直したら plugin.js
 
 | 変えたもの | 個人 PC | 会社 PC |
 |---|---|---|
-| Helix・starship・シェル・git | dev-setup の config を直して push(export.sh で書き出してもよい) | `git -C ~/Developer/dev-setup pull` で反映 |
+| Helix・starship・yazi・シェル・git | dev-setup の config を直して push(export.sh で書き出してもよい) | `git -C ~/Developer/dev-setup pull` で反映 |
 | Claude Code 設定・プラグイン・Orca 設定 | `scripts/export.sh` → commit → push | Claude に「dev-setup を更新したので反映して」と頼む。Claude が pull し、前回反映した目印(`applied` タグ)からの差分を見て、ステップ 6・7・9 のうち該当するものをやり直す |
 | skill | Skills の main に push | `git -C ~/Developer/Skills pull`(新しい skill があれば `link-skills.sh` を再実行) |
 | mod | version を上げて claude-mods の main に push | `claude plugin marketplace update claude-mods` → `claude plugin update orca-split-editor@claude-mods` → `/reload-plugins` |
@@ -178,7 +180,7 @@ mod は版の番号つきで入るので、claude-mods を直したら plugin.js
 - Brewfile の各パッケージと Hack Nerd Font が入っている
 - `/Applications/Orca.app/Contents/Resources/bin/orca` があり、版を表示する
 - 非対話シェルで `$VISUAL` が `hx`
-- Helix・starship の設定が dev-setup への symlink、`~/.gitconfig` に include がある
+- Helix・starship・yazi の設定が dev-setup への symlink、yazi のプラグインが入っている、`~/.gitconfig` に include がある
 - `~/.claude/keybindings.json` で Chat の ctrl+g が null、Global の ctrl+g が `app:toggleReplTab`
 - `~/.claude/settings.json` に settings.partial.json のキーが入っている(ステップ 0 で飛ばした値は除く)
 - `claude plugin list --json` に plugins.txt の全件が有効で出る

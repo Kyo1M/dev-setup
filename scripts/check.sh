@@ -50,9 +50,15 @@ fi
 visual="$(env -i HOME="$HOME" PATH="$PATH" zsh -c 'echo $VISUAL')"
 [ "$visual" = "hx" ] && ok "非対話シェルの VISUAL = hx" || ng "非対話シェルの VISUAL が '$visual'(~/.zshenv の source を確認)"
 grep -qs "dev-setup/config/zsh/zshrc.zsh" "$HOME/.zshrc" && ok "~/.zshrc が zshrc.zsh を読む" || ng "~/.zshrc に zshrc.zsh の source が無い"
-for pair in "$HOME/.config/helix/config.toml:$CONFIG/helix/config.toml" "$HOME/.config/starship.toml:$CONFIG/starship.toml" "$CLAUDE_DIR/keybindings.json:$CONFIG/claude/keybindings.json"; do
+pairs=("$HOME/.config/helix/config.toml:$CONFIG/helix/config.toml" "$HOME/.config/starship.toml:$CONFIG/starship.toml" "$CLAUDE_DIR/keybindings.json:$CONFIG/claude/keybindings.json")
+for f in yazi.toml keymap.toml init.lua package.toml; do pairs+=("$HOME/.config/yazi/$f:$CONFIG/yazi/$f"); done
+for pair in "${pairs[@]}"; do
   link="${pair%%:*}"; target="${pair#*:}"
   if [ -L "$link" ] && [ "$(readlink "$link")" = "$target" ]; then ok "$link -> dev-setup"; else ng "$link が dev-setup への symlink になっていない"; fi
+done
+# yazi のプラグイン(package.toml の use = "owner/repo:name" が plugins/name.yazi に入る)
+for p in $(sed -nE 's/^use *= *"[^"]*:([^"]+)"/\1/p' "$CONFIG/yazi/package.toml"); do
+  [ -d "$HOME/.config/yazi/plugins/$p.yazi" ] && ok "yazi のプラグイン $p" || ng "yazi のプラグイン $p が無い(ya pkg install)"
 done
 git config --global --get-all include.path 2>/dev/null | grep -q "dev-setup/config/git/gitconfig" \
   && ok "~/.gitconfig が dev-setup の gitconfig を include" || ng "~/.gitconfig に include が無い"
