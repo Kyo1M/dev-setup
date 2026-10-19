@@ -56,10 +56,17 @@ for pair in "${pairs[@]}"; do
   link="${pair%%:*}"; target="${pair#*:}"
   if [ -L "$link" ] && [ "$(readlink "$link")" = "$target" ]; then ok "$link -> dev-setup"; else ng "$link が dev-setup への symlink になっていない"; fi
 done
-# yazi のプラグイン(package.toml の use = "owner/repo:name" が plugins/name.yazi に入る)
-for p in $(sed -nE 's/^use *= *"[^"]*:([^"]+)"/\1/p' "$CONFIG/yazi/package.toml"); do
-  [ -d "$HOME/.config/yazi/plugins/$p.yazi" ] && ok "yazi のプラグイン $p" || ng "yazi のプラグイン $p が無い(ya pkg install)"
-done
+# yazi のプラグインと flavor。package.toml の use = "owner/repo:name" は <dir>/name.yazi に、
+# use = "owner/name.yazi"(コロン無し)は <dir>/name.yazi に入る。dir は [[plugin.deps]] が plugins、[[flavor.deps]] が flavors
+while read -r dir name; do
+  [ -d "$HOME/.config/yazi/$dir/$name.yazi" ] && ok "yazi の $dir/$name" || ng "yazi の $dir/$name が無い(ya pkg install)"
+done < <(awk '
+  /^\[\[plugin\.deps\]\]/ { dir = "plugins" } /^\[\[flavor\.deps\]\]/ { dir = "flavors" }
+  /^use *=/ && dir != "" {
+    u = $0; sub(/^use *= *"/, "", u); sub(/".*/, "", u)
+    if (index(u, ":")) sub(/.*:/, "", u); else { sub(/.*\//, "", u); sub(/\.yazi$/, "", u) }
+    print dir, u
+  }' "$CONFIG/yazi/package.toml")
 git config --global --get-all include.path 2>/dev/null | grep -q "dev-setup/config/git/gitconfig" \
   && ok "~/.gitconfig が dev-setup の gitconfig を include" || ng "~/.gitconfig に include が無い"
 [ -n "$(git config --global user.email 2>/dev/null)" ] && ok "git の user.email が入っている" || ng "git の user.email が空"

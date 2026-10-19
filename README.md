@@ -19,7 +19,7 @@ git clone https://github.com/Kyo1M/dev-setup ~/Developer/dev-setup を実行し�
 | 置き場 | 中身 | 別の Mac での読み方 |
 |---|---|---|
 | `SETUP.md` | Claude Code が上から実行する手順 | Claude が読む |
-| `Brewfile` | Helix・starship・zoxide・bat・delta・jq・node・pandoc・uv・lazygit・yazi(とプレビュー用の fd・ripgrep・fzf・ffmpeg・poppler・imagemagick・sevenzip)・Hack Nerd Font | `brew bundle` |
+| `Brewfile` | Helix・starship・zoxide・bat・delta・jq・node・pandoc・uv・lazygit・yazi(と yazi が検索に使う fd・ripgrep・fzf、プレビューに使う ffmpeg・poppler・imagemagick・sevenzip)・Hack Nerd Font | `brew bundle` |
 | `config/helix`・`config/starship.toml` | エディタとプロンプトの設定 | symlink |
 | `config/yazi` | ファイラーの設定(ファイルを Helix で開く)と、入れるプラグインの一覧 | symlink・`ya pkg install` |
 | `config/zsh` | `EDITOR=hx` 等と、zoxide・starship・bat の設定 | `~/.zshenv`・`~/.zshrc` から source |

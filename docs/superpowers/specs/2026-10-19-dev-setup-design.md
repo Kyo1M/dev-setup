@@ -104,7 +104,7 @@ Orca の設定の正本は `profiles/<profile>/profile-state.db`(SQLite)で、`o
 - `~/.zshenv` に `source ~/Developer/dev-setup/config/zsh/zshenv.zsh`(ファイルが無いときは読まないガード付き)。EDITOR / VISUAL / SUDO_EDITOR = hx を、Ctrl+G の mod が呼ぶ非対話シェルにも効かせる。`uv tool install` の入れ先 `~/.local/bin` もここで PATH に足す。
 - `~/.zshrc` に `source ~/Developer/dev-setup/config/zsh/zshrc.zsh`。zoxide と starship は brew の PATH が前提なので、ステップ 1 で `~/.zprofile` に `brew shellenv` があるかを確かめる。
 - `~/.gitconfig` の末尾に新しい `[include]` 節を書く(既存の `[include]` 節に足すと、後ろの設定に負けることがあるため)。user.name と email は手順の中で本人に聞いて `git config --global` で入れる。credential helper は載せない。
-- Helix・starship・yazi は、既存ファイルがあれば `.bak` に退避してから symlink を張る。yazi はディレクトリごとではなく設定ファイル 4 つを symlink にする(`ya pkg install` がプラグインを `~/.config/yazi/plugins/` に入れるので、ディレクトリごとだと dev-setup の中に入ってしまう)。
+- Helix・starship・yazi は、既存ファイルがあれば `.bak` に退避してから symlink を張る。yazi はディレクトリごとではなく設定ファイル 4 つを symlink にする(`ya pkg install` がプラグインを `~/.config/yazi/plugins/` に入れるので、ディレクトリごとだと dev-setup の中に入ってしまう)。`ya pkg add`・`upgrade` は symlink の先の `package.toml` を書き換えるので、会社 PC では使わない。
 
 ### コンテキストテンプレートのローカル運用(CLAUDE.local.md)
 
@@ -169,7 +169,7 @@ mod は版の番号つきで入るので、claude-mods を直したら plugin.js
 
 | 変えたもの | 個人 PC | 会社 PC |
 |---|---|---|
-| Helix・starship・yazi・シェル・git | dev-setup の config を直して push(export.sh で書き出してもよい) | `git -C ~/Developer/dev-setup pull` で反映 |
+| Helix・starship・yazi・シェル・git | dev-setup の config を直して push(export.sh で書き出してもよい) | `git -C ~/Developer/dev-setup pull` で反映。yazi の `package.toml` が変わったときだけ `ya pkg install` も要るので、Claude に「反映して」と頼む |
 | Claude Code 設定・プラグイン・Orca 設定 | `scripts/export.sh` → commit → push | Claude に「dev-setup を更新したので反映して」と頼む。Claude が pull し、前回反映した目印(`applied` タグ)からの差分を見て、ステップ 6・7・9 のうち該当するものをやり直す |
 | skill | Skills の main に push | `git -C ~/Developer/Skills pull`(新しい skill があれば `link-skills.sh` を再実行) |
 | mod | version を上げて claude-mods の main に push | `claude plugin marketplace update claude-mods` → `claude plugin update orca-split-editor@claude-mods` → `/reload-plugins` |

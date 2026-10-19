@@ -1,6 +1,6 @@
 # SETUP.md(Claude Code が実行する手順)
 
-この手順は、作者の個人 PC と同じ作業環境(Orca・Helix・Ctrl+G で開くエディタの mod・自作 skill・コンテキストテンプレート)をこの Mac に作るためのものです。上から順に実行してください。
+この手順は、作者の個人 PC と同じ作業環境(Orca・Helix・yazi・lazygit・Ctrl+G で開くエディタの mod・自作 skill・コンテキストテンプレート)をこの Mac に作るためのものです。上から順に実行してください。
 
 ## 進め方の約束
 
@@ -111,13 +111,16 @@ grep -qsF "$D/git/gitconfig" ~/.gitconfig || printf '\n[include]\n\tpath = %s\n'
 - `~/.zshenv` と `~/.zshrc` に `EDITOR`・`VISUAL`・starship・zoxide の設定が別にあれば、どちらを残すかを本人に聞きます(後に書いた方が勝ちます)。
 - Helix・starship・yazi の既存の設定は `.bak.<日時>` に退避されます。退避したら本人に伝えます。
 - `~/.config/yazi/plugins/` に package.toml に無いプラグインがあれば、消さずに本人に伝えます。
+- `ya pkg install` が「You have modified the contents」で止まったら、同じ名前のプラグインが別の中身で既に入っています。中身を本人に見せ、了承を得てから `ya pkg install --discard` で入れ直します(止まると、後ろのプラグインも入りません)。
+- `ya pkg install` がそれ以外の理由(GitHub に届かない等)で失敗したら、エラーの文言を本人に伝え、yazi のプラグインだけ飛ばして先へ進み、報告に書きます。プラグインが入っていないと、yazi は起動時に `init.lua` の `require` でエラーを出します。
+- この Mac では `ya pkg add`・`ya pkg upgrade` を使いません。`package.toml` は dev-setup への symlink なので、dev-setup の中身が書き換わり、次の `git pull --ff-only` が通らなくなります。プラグインを足したいときは本人に伝え、作者の PC で足してもらいます。
 
 本人に聞くこと: git の名前とメールアドレス。聞いたら `git config --global user.name "<名前>"` と `git config --global user.email "<メール>"` を実行します。
 
 確認:
 
 - `env -i HOME="$HOME" PATH="$PATH" zsh -c 'echo $VISUAL'` が `hx` を返すこと。
-- `ls ~/.config/yazi/plugins` に `git.yazi`・`full-border.yazi`・`smart-enter.yazi` があること。
+- `~/Developer/dev-setup/scripts/check.sh 2>/dev/null | grep yazi` が、yazi の項目をすべて ok で返すこと。
 - `git config --show-origin --get core.pager` が `delta` を返すこと。`delta` でなければ、出どころのファイルと行を本人に見せ、どちらを残すかを聞きます。
 
 ## 5. skill
@@ -271,7 +274,8 @@ git -C ~/Developer/dev-setup tag -f applied
    ```
 
 2. 変わったファイルごとに対応します。
-   - `config/helix`・`config/starship.toml`・`config/zsh`・`config/git`・`config/claude/keybindings.json`: symlink・source・include で読んでいるので、何もしなくても反映されています。
+   - `config/helix`・`config/starship.toml`・`config/zsh`・`config/git`・`config/claude/keybindings.json`、`config/yazi` の `yazi.toml`・`keymap.toml`・`init.lua`: symlink・source・include で読んでいるので、何もしなくても反映されています。
+   - `config/yazi/package.toml`: `ya pkg install` を実行します(プラグインの中身は symlink では届かないため)。新しいファイルが `config/yazi` に増えていたら、ステップ 4 をやり直します。
    - `config/claude/settings.partial.json`: ステップ 6 をやり直します。
    - `config/claude/plugins.txt`: 増えたプラグインをステップ 7 の方法で入れます。減ったものは本人に聞いてから `claude plugin uninstall` します。
    - `config/orca/settings.json`: `git diff applied..HEAD -- config/orca/settings.json` で変わった項目だけを、ステップ 9 の方法で本人に示します。
