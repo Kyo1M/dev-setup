@@ -95,7 +95,7 @@ pairs=("$HOME/.config/helix/config.toml:$D/helix/config.toml" "$HOME/.config/sta
 for f in yazi.toml keymap.toml init.lua package.toml; do pairs+=("$HOME/.config/yazi/$f:$D/yazi/$f"); done
 # Ghostty の設定は、Ghostty 本体が無くても、ステップ 9 で Orca が配色とフォントを読み込むために置く
 pairs+=("$HOME/.config/ghostty/config:$D/ghostty/config")
-for t in "$D"/ghostty/themes/*; do pairs+=("$HOME/.config/ghostty/themes/${t##*/}:$t"); done
+while IFS= read -r t; do pairs+=("$HOME/.config/ghostty/themes/${t##*/}:$t"); done < <(find "$D/ghostty/themes" -type f)
 for pair in "${pairs[@]}"; do
   link="${pair%%:*}"; target="${pair#*:}"
   [ -L "$link" ] && [ "$(readlink "$link")" = "$target" ] && continue
@@ -113,7 +113,8 @@ grep -qsF "$D/git/gitconfig" ~/.gitconfig || printf '\n[include]\n\tpath = %s\n'
 
 - `~/.zshenv` と `~/.zshrc` に `EDITOR`・`VISUAL`・starship・zoxide の設定が別にあれば、どちらを残すかを本人に聞きます(後に書いた方が勝ちます)。
 - Helix・starship・yazi・Ghostty の既存の設定は `.bak.<日時>` に退避されます。退避したら本人に伝えます。
-- `~/Library/Application Support/com.mitchellh.ghostty/config` が既にあれば、Ghostty と Orca は `~/.config/ghostty/config` と両方を読み、後から読む Library 側の値が勝ちます。中身を本人に見せ、残すかを聞きます。
+- Ghostty と Orca は `~/.config/ghostty/` と `~/Library/Application Support/com.mitchellh.ghostty/` の `config.ghostty`・`config` をすべて重ねて読み、Library 側の値が勝ちます。`~/.config/ghostty/config.ghostty` か、Library 側の 2 つのどちらかが既にあれば、中身を本人に見せ、残すかを聞きます(残すと dev-setup の値が上書きされ、ステップ 10 の点検で ng になります)。
+- この Mac では Ghostty の設定画面から設定を変えません。`~/.config/ghostty/config` は dev-setup への symlink なので、dev-setup の中身が書き換わり、次の `git pull --ff-only` が通らなくなります。
 - `~/.config/yazi/plugins/` に package.toml に無いプラグインがあれば、消さずに本人に伝えます。
 - `ya pkg install` が「You have modified the contents」で止まったら、同じ名前のプラグインが別の中身で既に入っています。中身を本人に見せ、了承を得てから `ya pkg install --discard` で入れ直します(止まると、後ろのプラグインも入りません)。
 - `ya pkg install` がそれ以外の理由(GitHub に届かない等)で失敗したら、エラーの文言を本人に伝え、yazi のプラグインだけ飛ばして先へ進み、報告に書きます。プラグインが入っていないと、yazi は起動時に `init.lua` の `require` でエラーを出します。
@@ -124,7 +125,7 @@ grep -qsF "$D/git/gitconfig" ~/.gitconfig || printf '\n[include]\n\tpath = %s\n'
 確認:
 
 - `env -i HOME="$HOME" PATH="$PATH" zsh -c 'echo $VISUAL'` が `hx` を返すこと。
-- `~/Developer/dev-setup/scripts/check.sh 2>/dev/null | grep yazi` が、yazi の項目をすべて ok で返すこと。
+- `~/Developer/dev-setup/scripts/check.sh 2>/dev/null | grep -i -e yazi -e ghostty` が、すべて ok で返すこと。
 - `git config --show-origin --get core.pager` が `delta` を返すこと。`delta` でなければ、出どころのファイルと行を本人に見せ、どちらを残すかを聞きます。
 
 ## 5. skill
@@ -223,10 +224,9 @@ Orca の設定は Orca の中のデータベースに入っていて、外から
 
 やること:
 
-1. まず本人に、Orca の設定画面(Cmd+,)で「Ghostty」と検索し、「Import from Ghostty」を押して、表示された内容で「Apply Changes」を押してもらいます。ステップ 4 で置いた `~/.config/ghostty/config` から、ターミナルの配色(`terminalColorOverrides`)・フォント・行の高さ・余白・背景の透過とぼかし・入力中のマウスカーソルを隠す設定が入ります。「Unsupported keys」に出るキーバインドやクリップボードの設定は、Orca には入らないので無視して構いません。
+1. まず本人に、Orca の設定画面(Cmd+,)で「Ghostty」と検索し、「Import from Ghostty」を押して、表示された内容で「Apply Changes」を押してもらいます。ステップ 4 で置いた `~/.config/ghostty/config` から、ターミナルの配色(`terminalColorOverrides`)・フォント・行の高さ・余白・背景の透過とぼかし・入力中のマウスカーソルを隠す設定が入ります。「Unsupported keys」には、Orca に対応する項目の無い `keybind`・`copy-on-select`・`clipboard-read`・`clipboard-write`・`window-padding-balance`・`macos-titlebar-style`・`macos-window-shadow`・`background-blur-radius (radius value not preserved)` が出ますが、無視して構いません。`theme (…)` が出たら配色が読み込めていないので、本人に「Apply Changes」を押さずに閉じてもらい、ステップ 4 の Ghostty の symlink と、Library 側に別の設定ファイルが無いかを確かめます。
 2. 残りの値を本人に示します。`~/Developer/dev-setup/scripts/check.sh 2>/dev/null | grep "Orca の設定"` で違う項目だけを出し、その項目の `jq . ~/Developer/dev-setup/config/orca/settings.json` の値を、「キー名・値・設定画面で探す手がかり(例：`theme` はアプリ全体の配色)」の 3 列の表にして本人に示します。手がかりはキー名から推して書き、確かでないものは「設定画面の検索で探す」とします。
-3. 次の 2 つは、入れるかどうかを本人に聞きます。
-   - `skipDeleteWorktreeConfirm`・`skipCloseTerminalWithRunningProcessConfirm`: 確認のダイアログを省く設定のため。
+3. 確認のダイアログを省く `skipDeleteWorktreeConfirm`・`skipCloseTerminalWithRunningProcessConfirm` は、入れるかどうかを本人に聞きます。
 4. 本人が Orca の設定画面で入れます。入れないと決めたキーは控えておき、ステップ 10 の `--skip` に渡します。
 5. 入れ終わったら次のコマンドで照合し、違う項目だけを本人に伝えます。
 
@@ -283,7 +283,7 @@ git -C ~/Developer/dev-setup tag -f applied
    - `config/claude/settings.partial.json`: ステップ 6 をやり直します。
    - `config/claude/plugins.txt`: 増えたプラグインをステップ 7 の方法で入れます。減ったものは本人に聞いてから `claude plugin uninstall` します。
    - `config/orca/settings.json`: `git diff applied..HEAD -- config/orca/settings.json` で変わった項目だけを、ステップ 9 の方法で本人に示します。
-   - `config/ghostty`: Ghostty 本体には symlink で反映されています。Orca は自動では読み直さないので、本人にステップ 9 の 1 の「Import from Ghostty」をもう一度押してもらいます。配色のファイルが `config/ghostty/themes` に増えていたら、ステップ 4 をやり直します。
+   - `config/ghostty`: Ghostty 本体を使っていれば、Ghostty で Cmd+Shift+, を押して設定を読み直してもらいます。Orca は自動では読み直さないので、本人にステップ 9 の 1 の「Import from Ghostty」をもう一度押してもらいます。配色のファイルが `config/ghostty/themes` に増えていたら、ステップ 4 をやり直します。
    - `Brewfile`: `brew bundle --file ~/Developer/dev-setup/Brewfile` を実行します。
    - `SETUP.md`: 変わったステップを読み、この Mac に当てはまるものをやり直します。
 3. skill は `git -C ~/Developer/Skills pull --ff-only` を実行し、新しい skill があれば `cd ~/Developer/Skills && scripts/link-skills.sh` を実行します。

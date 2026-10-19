@@ -8,7 +8,7 @@ REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 DEV_DIR="${DEV_DIR:-$HOME/Developer}"
 CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 ORCA_PROFILE_DIR="${ORCA_PROFILE_DIR:-$HOME/Library/Application Support/orca/profiles/local-default}"
-GHOSTTY_CONFIG="${GHOSTTY_CONFIG:-$HOME/Library/Application Support/com.mitchellh.ghostty/config}"
+GHOSTTY_CONFIG="${GHOSTTY_CONFIG:-}"
 CONFIG="$REPO_DIR/config"
 
 # 会社 PC に持っていかないプラグイン
@@ -54,16 +54,31 @@ for f in yazi.toml keymap.toml init.lua package.toml; do
 done
 copy "$CLAUDE_DIR/keybindings.json" "$CONFIG/claude/keybindings.json"
 # Ghostty の設定と、theme = で指す配色ファイル(Orca の「Import from Ghostty」が読む。会社 PC に Ghostty 本体が無くても配色を引けるよう同梱する)
+# Ghostty と Orca は 4 つの置き場を重ねて読むので、個人 PC で使っているのが 1 つだけであることを確かめる
+if [ -z "$GHOSTTY_CONFIG" ]; then
+  n=0
+  for f in "$HOME/.config/ghostty/config.ghostty" "$HOME/.config/ghostty/config" \
+           "$HOME/Library/Application Support/com.mitchellh.ghostty/config.ghostty" "$HOME/Library/Application Support/com.mitchellh.ghostty/config"; do
+    [ -f "$f" ] && { GHOSTTY_CONFIG="$f"; n=$((n + 1)); }
+  done
+  [ "$n" -eq 1 ] || fail "Ghostty の設定ファイルが $n 個あります(~/.config/ghostty と ~/Library/Application Support/com.mitchellh.ghostty の config・config.ghostty を 1 つにまとめてください)"
+fi
 copy "$GHOSTTY_CONFIG" "$CONFIG/ghostty/config"
-theme="$(sed -nE 's/^theme *= *"?([^"#]*[^"# ])"? *(#.*)?$/\1/p' "$CONFIG/ghostty/config" | tail -1)"
+theme="$("$REPO_DIR/scripts/ghostty-theme.sh" "$CONFIG/ghostty/config")"
+case "$theme" in
+  *light:*|*dark:*) fail "Ghostty の theme が light:/dark: の組です(Orca が読み込めないので、配色を 1 つにしてください)" ;;
+  /*) fail "Ghostty の theme が絶対パスです(別の Mac で読めないので、~/.config/ghostty/themes/ に置いて名前で指定してください)" ;;
+esac
 if [ -n "$theme" ]; then
   src=""
   for d in "$HOME/.config/ghostty/themes" /Applications/Ghostty.app/Contents/Resources/ghostty/themes; do
     [ -f "$d/$theme" ] && src="$d/$theme" && break
   done
-  [ -n "$src" ] || fail "Ghostty の配色 $theme が見つかりません"
+  [ -n "$src" ] || fail "Ghostty の配色 $theme が ~/.config/ghostty/themes にも Ghostty 本体にも見つかりません"
   copy "$src" "$CONFIG/ghostty/themes/$theme"
 fi
+# 今の theme 以外の配色ファイルは消す(会社 PC に使わない配色を残さない)
+find "$CONFIG/ghostty/themes" -type f ! -name "$theme" -delete
 echo "ok    helix・starship・yazi・ghostty・keybindings を書き出し"
 
 # 3. Claude Code の設定(許可リストのキーと defaultMode)

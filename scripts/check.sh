@@ -53,11 +53,23 @@ grep -qs "dev-setup/config/zsh/zshrc.zsh" "$HOME/.zshrc" && ok "~/.zshrc が zsh
 pairs=("$HOME/.config/helix/config.toml:$CONFIG/helix/config.toml" "$HOME/.config/starship.toml:$CONFIG/starship.toml" "$CLAUDE_DIR/keybindings.json:$CONFIG/claude/keybindings.json")
 for f in yazi.toml keymap.toml init.lua package.toml; do pairs+=("$HOME/.config/yazi/$f:$CONFIG/yazi/$f"); done
 pairs+=("$HOME/.config/ghostty/config:$CONFIG/ghostty/config")
-for t in "$CONFIG"/ghostty/themes/*; do [ -f "$t" ] && pairs+=("$HOME/.config/ghostty/themes/${t##*/}:$t"); done
+while IFS= read -r t; do pairs+=("$HOME/.config/ghostty/themes/${t##*/}:$t"); done < <(find "$CONFIG/ghostty/themes" -type f 2>/dev/null)
 for pair in "${pairs[@]}"; do
   link="${pair%%:*}"; target="${pair#*:}"
   if [ -L "$link" ] && [ "$(readlink "$link")" = "$target" ]; then ok "$link -> dev-setup"; else ng "$link が dev-setup への symlink になっていない"; fi
 done
+# Ghostty: theme が指す配色が読めるか、dev-setup から消えた配色の壊れた symlink が無いか、
+# dev-setup の値を上書きしうる別の設定ファイル(後から読まれる)が無いか
+gt="$("$REPO_DIR/scripts/ghostty-theme.sh" "$HOME/.config/ghostty/config" 2>/dev/null || true)"
+if [ -n "$gt" ]; then
+  [ -r "$HOME/.config/ghostty/themes/$gt" ] && ok "Ghostty の配色 $gt" || ng "Ghostty の配色 $gt が ~/.config/ghostty/themes に無い(SETUP のステップ 4)"
+fi
+broken="$(find "$HOME/.config/ghostty/themes" -type l ! -exec test -e {} \; -print 2>/dev/null)"
+[ -z "$broken" ] || ng "Ghostty の配色に壊れた symlink がある: $(echo $broken)"
+for f in "$HOME/.config/ghostty/config.ghostty" "$HOME/Library/Application Support/com.mitchellh.ghostty/config.ghostty" "$HOME/Library/Application Support/com.mitchellh.ghostty/config"; do
+  [ -e "$f" ] && ng "$f があり、dev-setup の Ghostty の設定を上書きしうる(中身を確かめて、残すか決める)"
+done
+
 # yazi のプラグインと flavor。package.toml の use = "owner/repo:name" は <dir>/name.yazi に、
 # use = "owner/name.yazi"(コロン無し)は <dir>/name.yazi に入る。dir は [[plugin.deps]] が plugins、[[flavor.deps]] が flavors
 while read -r dir name; do

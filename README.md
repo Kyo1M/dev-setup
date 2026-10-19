@@ -33,7 +33,7 @@ skill・mod・コンテキストテンプレートの中身は、それぞれ [K
 
 グローバルの CLAUDE.md・memory・認証情報・Codex の設定は持っていきません。
 
-`config/ghostty/themes/Mariana` は Ghostty に同梱の配色ファイル(元は [iTerm2-Color-Schemes](https://github.com/mbadolato/iTerm2-Color-Schemes)、MIT ライセンス)の写しです。
+`config/ghostty/themes/` の配色ファイルは Ghostty に同梱のものの写しです。出所とライセンスは `config/ghostty/NOTICE.md` にあります。
 
 ## 個人 PC で設定を変えたとき
 

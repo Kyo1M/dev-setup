@@ -44,7 +44,7 @@ dev-setup/
 ├── config/
 │   ├── helix/config.toml            ~/.config/helix/config.toml から symlink
 │   ├── starship.toml                ~/.config/starship.toml から symlink
-│   ├── ghostty/                     config と themes/<配色>。~/.config/ghostty/ から symlink。Orca の「Import from Ghostty」で読み込む
+│   ├── ghostty/                     config と themes/<配色>。~/.config/ghostty/ の各ファイルから symlink。Orca の「Import from Ghostty」で読み込む
 │   ├── yazi/                        yazi.toml・keymap.toml・init.lua・package.toml。~/.config/yazi/ の各ファイルから symlink。プラグインは ya pkg install
 │   ├── zsh/zshenv.zsh               EDITOR / VISUAL / SUDO_EDITOR = hx。~/.zshenv から source
 │   ├── zsh/zshrc.zsh                zoxide・starship・bat。~/.zshrc から source
