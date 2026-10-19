@@ -1,0 +1,10 @@
+claude-code-setup@claude-plugins-official
+claude-md-management@claude-plugins-official
+code-review@claude-plugins-official
+code-simplifier@claude-plugins-official
+context7@claude-plugins-official
+frontend-design@claude-plugins-official
+i-have-adhd@i-have-adhd
+orca-split-editor@claude-mods
+playwright@claude-plugins-official
+skill-creator@claude-plugins-official

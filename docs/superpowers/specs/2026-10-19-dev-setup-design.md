@@ -80,9 +80,8 @@ mod の入れ方は claude-mods の README の `/plugin install` と同じ内容
 |---|---|
 | model・language・effortLevel・modelSettings・advisorModel・tui・voice・voiceEnabled | 個人 PC の値。language は個人 PC 側の誤字(`Japaese`)を直してから書き出す |
 | permissions.defaultMode | `auto` |
-| enabledPlugins | plugins.txt の全件を true |
 
-plugins.txt に載せるのは、公式マーケットプレイスで有効にしている 8 つ(claude-code-setup・claude-md-management・code-review・code-simplifier・context7・frontend-design・playwright・skill-creator)、`i-have-adhd@i-have-adhd`、`orca-split-editor@claude-mods`。`codex@openai-codex` と無効にしているものは載せない。マーケットプレイスは `marketplace add` で登録するので、extraKnownMarketplaces は settings.partial.json に入れない。
+plugins.txt に載せるのは、公式マーケットプレイスで有効にしている 8 つ(claude-code-setup・claude-md-management・code-review・code-simplifier・context7・frontend-design・playwright・skill-creator)、`i-have-adhd@i-have-adhd`、`orca-split-editor@claude-mods`。`codex@openai-codex` と無効にしているものは載せない。マーケットプレイスは `marketplace add` で、enabledPlugins は `claude plugin install` で入るので、どちらも settings.partial.json に入れない。
 
 マージは「既存の settings.json を残し、上のキーだけ上書き・追加する」。Orca が書き込む statusLine と hook は会社 PC の Orca が自分で入れるので、dev-setup からは触らない。
 
@@ -137,16 +136,16 @@ project-context-template の AGENTS.md は、push・PR のマージによる確�
 ステップの順は次のとおり。
 
 0. 前提の確認。`claude --version` が 2.1.303 以上(個人 PC で mod と `app:toggleReplTab` が動いている版。これより古ければ `claude update` を案内する)、管理設定(`/Library/Application Support/ClaudeCode/managed-settings.json`)の有無と中身、`git ls-remote https://github.com/Kyo1M/skills` が通るか。管理設定で使えない値(defaultMode・voice・advisorModel 等)があれば、その値を飛ばして報告に添える。
-1. Command Line Tools(`xcode-select -p`)と Homebrew の確認、`brew bundle`、`~/.zprofile` の `brew shellenv`。
-2. Orca の確認。brew の `orca` は別のソフトなので使わない。`/Applications/Orca.app/Contents/Resources/bin/orca` が無ければ、公式サイトから入れて /Applications に置くよう本人に頼んで止まる。
-3. dev-setup の clone と、シェル・Helix・starship・git の 1 行追加。
-4. skill の clone と `link-skills.sh`(cwd を `~/Developer/Skills` にして実行)。worklog の CLI は `uv tool install git+https://github.com/Kyo1M/claude-worklog`。
-5. Claude Code 設定と keybindings のマージ。
-6. マーケットプレイスの追加と plugins.txt の全件 install。
-7. コンテキストテンプレートの clone。
-8. Orca 設定。`config/orca/settings.json` の値を設定画面の項目名つきの表で本人に示し、入れてもらう。
-9. `scripts/check.sh` で点検し、結果を本人に報告する。
-10. 最後に 1 回だけ、Claude Code の再起動を本人に頼む(途中で再起動すると、手順を実行している Claude の文脈が切れるため)。再起動後に Ctrl+G を本人に試してもらう。
+1. Command Line Tools(`xcode-select -p`)と Homebrew の確認、`~/.zprofile` の `brew shellenv`。
+2. dev-setup の clone と `brew bundle`。
+3. Orca の確認。brew の `orca` は別のソフトなので使わない。`/Applications/Orca.app/Contents/Resources/bin/orca` が無ければ、公式サイトから入れて /Applications に置くよう本人に頼んで止まる。
+4. シェル・Helix・starship・git の 1 行追加と symlink。
+5. skill の clone と `link-skills.sh`(cwd を `~/Developer/Skills` にして実行)。worklog の CLI は `uv tool install git+https://github.com/Kyo1M/claude-worklog`。
+6. Claude Code 設定のマージと keybindings の symlink。
+7. マーケットプレイスの追加と plugins.txt の全件 install。
+8. コンテキストテンプレートの clone。
+9. Orca 設定。`config/orca/settings.json` の値を、設定画面で探す手がかりつきの表で本人に示し、入れてもらう。
+10. `scripts/check.sh` で点検して結果を本人に報告し、最後に 1 回だけ Claude Code の再起動を本人に頼む(途中で再起動すると、手順を実行している Claude の文脈が切れるため)。再起動後に Ctrl+G を本人に試してもらう。
 
 skill のうち、使うのに認証や API キーが要るもの(gemini-ja-proofread の Gemini API キー、docx-export の Google Drive 部分の gog CLI と Google 認証、daily-log の Linear 部分)は、入れたうえで「認証が要る」と報告に添える。daily-log の launchd 用 plist には個人 PC の絶対パスが入っているので、会社 PC で定期実行するときは書き換えが要ることも添える。
 
@@ -167,7 +166,7 @@ mod は版の番号つきで入るので、claude-mods を直したら plugin.js
 | 変えたもの | 個人 PC | 会社 PC |
 |---|---|---|
 | Helix・starship・シェル・git | dev-setup の config を直して push(export.sh で書き出してもよい) | `git -C ~/Developer/dev-setup pull` で反映 |
-| Claude Code 設定・プラグイン・Orca 設定 | `scripts/export.sh` → commit → push | `git pull` → Claude に「差分を反映して」と頼み、ステップ 5・6・8 のうち該当するものをやり直す |
+| Claude Code 設定・プラグイン・Orca 設定 | `scripts/export.sh` → commit → push | `git pull` → Claude に「差分を反映して」と頼み、ステップ 6・7・9 のうち該当するものをやり直す |
 | skill | Skills の main に push | `git -C ~/Developer/Skills pull`(新しい skill があれば `link-skills.sh` を再実行) |
 | mod | version を上げて claude-mods の main に push | `claude plugin marketplace update claude-mods` → `claude plugin update orca-split-editor@claude-mods` → `/reload-plugins` |
 | テンプレート | project-context-template の main に push | `git -C ~/Developer/project-context-template pull`(既に作ったコンテキストリポジトリへは反映しない) |

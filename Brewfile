@@ -1,0 +1,11 @@
+# 会社 PC で brew bundle --file ~/Developer/dev-setup/Brewfile
+brew "helix"
+brew "starship"
+brew "zoxide"
+brew "bat"
+brew "git-delta"
+brew "jq"
+brew "node"
+brew "pandoc"
+brew "uv"
+cask "font-hack-nerd-font"
