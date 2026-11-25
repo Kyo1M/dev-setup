@@ -4,7 +4,7 @@
 
 ## 別の Mac に入れる
 
-その Mac の Orca で Claude Code を起動し、次の文を渡します。GitHub のアカウントは要りません(任意の「Orca の bot」だけは要ります。下の「中身」を参照)。
+その Mac の Orca で Claude Code を起動し、次の文を渡します。GitHub のアカウントは要りません(SETUP.md の任意の節「Orca の bot を使うとき」だけは要ります。下の「中身」を参照)。
 
 ```
 git clone https://github.com/Kyo1M/dev-setup ~/Developer/dev-setup を実行し、~/Developer/dev-setup/SETUP.md を読んで、上から順にこの Mac をセットアップしてください
@@ -28,11 +28,11 @@ git clone https://github.com/Kyo1M/dev-setup ~/Developer/dev-setup を実行し�
 | `config/claude` | Claude Code の設定の一部・keybindings(Ctrl+G を mod に回す)・入れるプラグインの一覧 | マージ・symlink・`claude plugin install` |
 | `config/orca/settings.json` | Orca の見た目と操作感の設定値 | 設定画面で入れる |
 | `config/context/CLAUDE.local.md` | コンテキストリポジトリをローカルの git だけで使うときの読み替え | 新しいコンテキストリポジトリに置く |
-| `SETUP.md` の「Orca の bot を使うとき」 | Orca の bot 5 体の役割と覚えたことを、非公開の Kyo1M/orca-bots から写す手順。任意で、GitHub のアカウント(Kyo1M)でのサインインが要る | 本人が頼んだときだけ Claude が進める(clone → Orca の画面で bot を作る → `sync.sh import`) |
+| `SETUP.md` の「Orca の bot を使うとき」 | Orca の bot 5 体の役割と覚えたことを、非公開の Kyo1M/orca-bots から写す手順。任意で、GitHub のアカウント(Kyo1M)でのサインインが要る | 本人が頼んだときだけ Claude が進める(clone → Orca の画面で bot を作る → `scripts/sync.sh import`) |
 
 skill・mod・コンテキストテンプレートの中身は、それぞれ [Kyo1M/skills](https://github.com/Kyo1M/skills)・[Kyo1M/claude-mods](https://github.com/Kyo1M/claude-mods)・[Kyo1M/project-context-template](https://github.com/Kyo1M/project-context-template) にあり、このリポジトリはそれを指すだけです。
 
-グローバルの CLAUDE.md・Claude Code の memory・認証情報・Codex の設定は持っていきません。Orca の bot の覚えたことは、上の手順で orca-bots から写します。
+グローバルの CLAUDE.md・Claude Code の memory・認証情報・Codex の設定は持っていきません。Orca の bot の覚えたことは、SETUP.md の「Orca の bot を使うとき」で orca-bots から写します。
 
 `config/ghostty/themes/` の配色ファイルは Ghostty に同梱のものの写しです。出所とライセンスは `config/ghostty/NOTICE.md` にあります。
 
@@ -44,7 +44,7 @@ skill・mod・コンテキストテンプレートの中身は、それぞれ [K
 | シェル・git の設定 | `config/zsh`・`config/git` を直して push | 同上(pull すれば読み直しは要らない) |
 | skill | Skills の main に push | `git -C ~/Developer/Skills pull` |
 | mod | `plugin.json` の version を上げて claude-mods の main に push | Claude に「dev-setup を更新したので反映して」 |
-| Orca の bot の役割・覚えたこと | orca-bots で pull → `scripts/sync.sh import --apply`(別の Mac で足したことを先に取り込む)→ `sync.sh export` → commit → push | 使う前に pull → `sync.sh import --apply`、使った後に `sync.sh export` → commit → push(SETUP.md の「Orca の bot を使うとき」の 4) |
+| Orca の bot の役割・覚えたこと | orca-bots で pull → `scripts/sync.sh import` で差分を見て `--apply`(別の Mac で足したことを先に取り込む)→ `scripts/sync.sh export` → commit → push | 使う前に pull → `scripts/sync.sh import` で差分を見て `--apply`、使った後に `scripts/sync.sh export` → commit → push(SETUP.md の「Orca の bot を使うとき」) |
 
 `export.sh` は、Skills・claude-mods・project-context-template の手元が main で GitHub と一致していないと止まります。別の Mac は GitHub の main を取るので、手元とずれたまま書き出さないためです。
 
