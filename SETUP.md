@@ -6,7 +6,7 @@
 
 - 各ステップは「やること」「既にあるときの扱い」「確認」の順に書いてあります。確認が通らなかったら、次へ進まずに本人へ状況を伝えてください。
 - 既存のファイルは消さずに、`.bak.<日時>` を付けて退避します。上書きの前に必ず中身を見てください。
-- この Mac では GitHub のアカウントを使いません。clone と pull は HTTPS の匿名アクセスだけで行い、push はしません。
+- この Mac では GitHub のアカウントを使いません。clone と pull は HTTPS の匿名アクセスだけで行い、push はしません。例外は末尾の「Orca の bot を使うとき」だけです。本人に頼まれたときだけ、作者の GitHub のアカウントでサインインし、非公開の orca-bots にだけ push します。
 - コマンドのブロックは、シェルの状態が次のブロックに引き継がれない前提で書いてあります。各ブロックの先頭の `eval "$(...brew shellenv)"` の行は省かないでください。
 - Claude Code の再起動は最後(ステップ 10)に 1 回だけ頼みます。途中で再起動すると、この手順を進めている文脈が切れるためです。
 - 置き場は `~/Developer/` です(`~/Documents` は iCloud 同期で git が壊れることがあるので使いません)。
@@ -266,6 +266,8 @@ git -C ~/Developer/dev-setup tag -f applied
 - docx-export の Google ドキュメント出力: gog CLI と Google の認証
 - daily-log の Linear 部分: Linear の接続。定期実行の launchd 用 plist には作者の PC のパスが入っているので、使うときは書き換えが要る
 
+Orca の bot を作者の PC と同じ中身で使いたいときは、末尾の「Orca の bot を使うとき」を頼んでもらえば進められる、と添えます。GitHub のアカウントでのサインインが要るので、この手順の中では進めません。
+
 ## 作者の PC で変更があったとき
 
 本人から「dev-setup を更新したので反映して」と頼まれたら、次のとおり進めます。
@@ -285,7 +287,7 @@ git -C ~/Developer/dev-setup tag -f applied
    - `config/orca/settings.json`: `git diff applied..HEAD -- config/orca/settings.json` で変わった項目だけを、ステップ 9 の方法で本人に示します。
    - `config/ghostty`: Ghostty 本体を使っていれば、Ghostty で Cmd+Shift+, を押して設定を読み直してもらいます。Orca は自動では読み直さないので、本人にステップ 9 の 1 の「Import from Ghostty」をもう一度押してもらいます。配色のファイルが `config/ghostty/themes` に増えていたら、ステップ 4 をやり直します。
    - `Brewfile`: `brew bundle --file ~/Developer/dev-setup/Brewfile` を実行します。
-   - `SETUP.md`: 変わったステップを読み、この Mac に当てはまるものをやり直します。
+   - `SETUP.md`: 変わったステップを読み、この Mac に当てはまるものをやり直します。「Orca の bot を使うとき」が変わっていたら、実行せずに本人へ伝えます(本人が bot を使うと決めたときだけ進めるため)。
 3. skill は `git -C ~/Developer/Skills pull --ff-only` を実行し、新しい skill があれば `cd ~/Developer/Skills && scripts/link-skills.sh` を実行します。
 4. mod は `claude plugin marketplace update claude-mods` → `claude plugin update orca-split-editor@claude-mods` を実行し、本人に `/reload-plugins` を頼みます。
 5. `scripts/check.sh` を実行し、すべて片付いたら `git -C ~/Developer/dev-setup tag -f applied` で目印を進めて報告します。
@@ -304,3 +306,145 @@ git -C ~/Developer/$NAME init -b main
 ```
 
 その後、`~/Developer/$NAME` で Claude Code を起動し、「セットアップしたい」と伝えます。`AGENTS.md` の初期セットアップフローは `CLAUDE.local.md` の読み替え(push・PR をしない、確定はローカルのマージ)に沿って進みます。
+
+## Orca の bot を使うとき
+
+本人から頼まれたときだけ進めます。上のステップ 0〜10 には含めません。
+
+作者の PC の Orca の bot 5 体の中身(役割の `SOUL.md`、覚えたことの `MEMORY.md`・`memory/` など)は、非公開のリポジトリ Kyo1M/orca-bots にあります。この Mac の Orca で同じ名前の bot を作り、そこへ中身を写すと、作者の PC と同じ役割・同じ覚えたことのまま bot を使えます。写し方の正本は orca-bots の `README.md` と `scripts/sync.sh` で、ここにはこの Mac で進める順番を書きます(orca-bots の README の「メインの Mac」は作者の PC のことです)。
+
+持っていけないもの:
+
+- チャット履歴・item
+- 接続(GitHub・Slack などのサインイン)。bot ごとに、この Mac の Orca で本人につなぎ直してもらいます
+- automation(毎週の点検など)。この Mac では作りません。作ると作者の PC と 2 台で動き、item と PR が二重になります。orca-bots の `automations.json` は作者の PC の控えなので、読んでも作りません
+
+### 始める前に本人の了承を取ること
+
+- `brew install gh` で GitHub の CLI を入れる
+- 作者の GitHub のアカウント(Kyo1M)で、この Mac からサインインする。認証情報は gh が macOS のキーチェーンに置き、`gh auth setup-git` が `~/.gitconfig` に git の認証の設定を足す
+- 非公開の orca-bots を `~/Developer/orca-bots` に clone し、bot の中身(案件の覚えたことを含む)をこの Mac の `~/.orca/bots/` に写す
+- bot を使った後に、bot が書き足したことを orca-bots に push する
+
+### 1. サインインと clone
+
+やること:
+
+```sh
+for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do [ -x "$b" ] && eval "$("$b" shellenv)" && break; done
+command -v gh >/dev/null || brew install gh
+gh auth status
+```
+
+サインインしていなければ、本人に Orca のターミナルで次を実行してもらいます(ブラウザでの確認と質問への回答があり、Claude Code からは進められないため)。
+
+```sh
+gh auth login --hostname github.com --git-protocol https --web
+```
+
+終わったら、次を実行します。
+
+```sh
+for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do [ -x "$b" ] && eval "$("$b" shellenv)" && break; done
+gh auth setup-git
+[ -d ~/Developer/orca-bots ] || gh repo clone Kyo1M/orca-bots ~/Developer/orca-bots
+```
+
+既にあるとき:
+
+- 別の GitHub のアカウントで既にサインインしていたら、本人に伝えてから Kyo1M を足します。gh は最後にサインインしたアカウントを使うので、push の前に `gh auth status` で Kyo1M が使われていること(`Active account: true`)を確かめます。
+- orca-bots が既にあれば `git -C ~/Developer/orca-bots pull --ff-only` にします。
+
+確認:
+
+- `gh auth status` に、github.com の Kyo1M が出ること。
+- `~/Developer/orca-bots/bots.json` があること。
+
+### 2. Orca で bot を作る
+
+bot は Orca の画面からしか作れないので、本人に頼みます。
+
+やること: `jq -r '.[]' ~/Developer/orca-bots/bots.json` で bot の名前を出し、本人に次を頼みます。
+
+- Orca で、出した名前と 1 字も違わない名前の bot を 1 体ずつ作る(`sync.sh` が名前で bot を引くため)
+- エージェントはすべて Claude にする
+- 作った bot には、写し終わるまで話しかけない(bot が先に `SOUL.md`・`MEMORY.md` を書くと、`sync.sh` がそのファイルを見送るため)
+
+bot のフォルダ名は Orca が決めるので、作者の PC と違っていて構いません。
+
+確認: 次の手順 3 の最初のコマンドが、「見つかりません」などで止まらずに差分を出すこと。
+
+### 3. 1 体で試してから残りを写す
+
+Orca の CLI は、brew の `orca`(別のソフト)と取り違えないよう、`ORCA_CLI_COMMAND` で場所を指定して呼ばせます。
+
+やること(差分の表示だけで、何も書きません):
+
+```sh
+for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do [ -x "$b" ] && eval "$("$b" shellenv)" && break; done
+cd ~/Developer/orca-bots
+ORCA_CLI_COMMAND=/Applications/Orca.app/Contents/Resources/bin/orca scripts/sync.sh import
+```
+
+- 「見つかりません」「フォルダが 2 個あり」「Orca が知らない bot」で止まったら、出てきた理由を本人に伝え、bot の名前の直しや、使わない bot の片付けを頼みます。
+- 「見送り」が出たら、bot に話しかけて先にファイルが書かれています。出てきた行を本人に見せ、どうするかを聞きます。
+
+差し替えた `SOUL.md`・`MEMORY.md` を Orca がそのまま読み込むかは、まだ確かめていません。そこで、まず 1 体だけ写します(orca-bots の README の例に合わせて `git-cleanup` を使います)。
+
+```sh
+for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do [ -x "$b" ] && eval "$("$b" shellenv)" && break; done
+cd ~/Developer/orca-bots
+ORCA_CLI_COMMAND=/Applications/Orca.app/Contents/Resources/bin/orca scripts/sync.sh import --bot git-cleanup --apply
+```
+
+写したら、本人に、Orca でその bot に「あなたの役割と、覚えていることを教えて」と話しかけてもらいます。返事が終わったら、同じコマンドを `--apply` を付けずに実行します。
+
+確認:
+
+- 本人が見て、bot の返事が `~/Developer/orca-bots/bots/git-cleanup/SOUL.md`・`MEMORY.md` の中身と合っていること。
+- `--apply` なしの実行で、`SOUL.md`・`MEMORY.md` が「同じ」で数えられているか、「見送り」で出る行がこの会話で bot が書き足した行だけであること。「新規」「変更」が出たら、Orca が写した中身を戻したか書き換えています。
+
+確認が通らなかったら、残りは写さずに止まり、出てきた内容を本人に伝えます。orca-bots の README の「未確認のこと」に、別の取り込み方(まだ試していない)があることも伝えますが、本人に頼まれるまで試しません。
+
+確認が通ったら、残りを写します。
+
+```sh
+for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do [ -x "$b" ] && eval "$("$b" shellenv)" && break; done
+cd ~/Developer/orca-bots
+ORCA_CLI_COMMAND=/Applications/Orca.app/Contents/Resources/bin/orca scripts/sync.sh import --apply
+```
+
+- 「異なる絶対パス」の注意が出たら、中身に作者の PC の bot のフォルダ名が入っています。本人に伝え、その bot に自分のフォルダ名へ直してもらうよう頼みます。
+- 最後に、bot ごとに要る接続(GitHub・Slack など)を、Orca でつなぎ直してもらうよう本人に頼みます。
+
+### 4. bot を使う前と使った後
+
+bot は使うたびに `MEMORY.md`・`memory/` などを書き足します。作者の PC と 2 台で書き足すと食い違うので、本人に次の順で使ってもらい、頼まれたら Claude が進めます。
+
+使う前(作者の PC で書き足したことを取り込む):
+
+```sh
+for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do [ -x "$b" ] && eval "$("$b" shellenv)" && break; done
+cd ~/Developer/orca-bots
+git pull --ff-only
+ORCA_CLI_COMMAND=/Applications/Orca.app/Contents/Resources/bin/orca scripts/sync.sh import
+```
+
+差分を本人に見せ、了承を得てから `--apply` を付けて実行します。
+
+使った後(この Mac で書き足したことを orca-bots に戻す):
+
+```sh
+for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do [ -x "$b" ] && eval "$("$b" shellenv)" && break; done
+cd ~/Developer/orca-bots
+ORCA_CLI_COMMAND=/Applications/Orca.app/Contents/Resources/bin/orca scripts/sync.sh export
+git diff
+```
+
+`git diff` で消える行が無いことを確かめてから、`git add bots bots.json` → `git commit -m "bots: export"` → `git push` を実行します。push の前に `gh auth status` で Kyo1M が使われていることを確かめます。
+
+`import` が「見送り」を出したときと、`export` が止まったとき:
+
+- 出てきた行を本人に見せ、作者の PC とこの Mac のどちらを採るかを聞きます。
+- `--force` は、本人がどちらを採るかを決めたときだけ付けます。場合ごとの進め方は、orca-bots の README の「2 台で使うときの注意」にあります。
+- `MEMORY.md` の行を消すときは、`sync.sh` でなく、その Mac で `/Applications/Orca.app/Contents/Resources/bin/orca bot memory forget --bot "<bot の名前>" --fact "<消す行>"` を使います(Orca が行を管理していて、ほかの方法で消した行は戻すため)。
